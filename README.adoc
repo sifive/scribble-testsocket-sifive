@@ -1,9 +1,9 @@
-= Documenting a Component
+= Documenting a Block
 
 == What you need to know
 
-* Knowledge of the device. What it does, how it is programmed and how do you interface to it.
- What are the configurable values.
+* Knowledge of the block. What it does, how it is programmed, how do you interface to it,
+ and what are the configurable values.
 * How Scribble "Sections" work. Sections are the "generators" which produce documentation text.
 * The basics of Asciidoc. Asciidoc is the markup language used by Scribble.
 * The Jinja template processor. While complex Sections can be written
@@ -11,110 +11,115 @@
 
 == Sections of a Document
 
-The first step in describing a component is to organize the information into sections.
-Scribble expects three sections for each type of component.
- - An "Overview"" section with a paragraph describing the component.
- - A "Programming" section describing how to use and program the component.
+Scribble organizes a document into Sections, where each Section produces
+a piece of text and, optionally, invokes other Sections as subsections. When
+all of the Sections are evaluated, the resulting text is assembled into an AsciiDoc document.
+
+When creating documents for a new hardware block, we aren't creating a whole new document.
+Rather, we are creating special Sections
+which can be inserted into other documents.
+
+These special Sections include:
+
+ - An "Overview"" paragraph describing the block.
+ - A "Programming" chapter describing how to use and program the block.
  This section describes the registers, the memory mapped addresses,
- and gives a detailed decription of how the device should be configured.
- - A "HardwareInterface&quot; section describing how to interface to the component.
- This section describes the interrupts, clocks and signals used by the device.
+ and gives a detailed decription of how the block should be configured.
+ - A "HardwareInterface" chapter describing how to interface to the block.
+ This section describes the interrupts, clocks and signals used by the block.
+
+Typically, these sections will live in the "components" directory, in a subdirectory
+named after the block or device.
+
+For example, a new design for a "Whizbang" would have three files inside the following directories:
+```
+    - docs/scribble
+        - components
+            - Whizbang
+                - Overview.jinja2
+                - Programming.jinja2
+                - HardwareInterface.jinja2
+```
 
 === What does a Section look like?
 
-A Scribble Section is a function which produces text.
-Whether implemented as Jinja or in Python, it is invoked
-through Scribble's "Section" call.
-
-The call looks like:
- `Section(name, scope, named_args, **context) --&gt; Text`
-
+A Section can be implemented as a Jinja template or as a Python function.
+In either case, it is invoked through Scribble's "Section" call.
+```
+Section("module name", scope, **context)
+```
 where:
 
 [horizontal]
 name:: is the python or jinja module name.
-scope:: is a subtree (element) of the object model
-named_args:: are named values passed to the python or Jinja code.
-context:: (or `kwargs`) are additional named values passed from the parent section.
+scope:: is a subtree (element) of the object model.
+context:: are additional named values passed to the section.
 
-If the section is written as a Jinja template, then all the
+When a section is written as a Jinja template, all the
 named arguments are available as Jinja template variables.
 
-When creating documention for a new device, the new sections
-should be placed in the directory `scribble/components/&lt;device name&gt;`,
-where `<device name>` is the name of the device's object model schema.
-
-A simple implementation would consist of three files:
-Overview.jinja2, Programming.jinja2 and HardwareInterface.jinja2.
-A more complex implementation might include jinja subsections as
-well as sections written in Python.
-
-For this tutorial, we will focus on the simple case.
 
 === "Overview" Paragraph
 
-The overview is an optional paragraph describing the component. +
+The overview is a simple paragraph describing the block.
+
 It is usually written as a single Jinja template.
-It doesn't need to contain much detail, but it isn't entirely static either.
+It doesn't need a lot of detail, but it isn't entirely static either.
 For example, if there is more than one instance of the device, then this
 section would mention how many there are.
 
 As an example, in the file `Overview.jinja2` the following line would describe how many parallel ports are in the design.
 
 ----
-   The {{ product_name }} contains {{ devices | length | human_count }} Parallel I/O ports.
+The {{ product_name }} contains {{ devices | length | english_number }} Parallel I/O ports.
 ----
 
 which would be displayed as:
 
 ----
- The PIO Test Socket contains five Parallel I/O ports.
+The PIO Test Socket contains five Parallel I/O ports.
 ----
 
 === "Programming" Chapter
+This chapter describes the device or block and how to use it.
+For some devices, the Section can get quite large and include a hierarchy
+of sections and subsections. For simpler blocks, it might be a single Jinja
+template.
+
 
 === "HardwareInterface" Chapter
+
 
 == Appendix: Jinja Templates
 
 === Overview
 Jinja templates consist of text interspersed with Jinja control statements.
-For a good introduction to Jinja, see <TODO - insert linke>
+For a good introduction to Jinja, see the online https://jinja.palletsprojects.com/en/2.10.x/[Jinja Documentation].
 
-=== Jinja control structures.
-As a quick overview, Jinja supports the following control structures:
+When Scribble invokes a template, it passes a number of predefined variables and template functions.
+These variables and functions are described below.
 
-[horizontal]
-{{ <python expression> }}::
-The Python expression is evaluated, converted to text, and inserted into the document.
+=== Scribble Variables in Templates
+Any named parameter passed to
+a Section() automatically becomes a Jinja template variable.
 
-{% set var = <expression> %}::
-Creates a new Jinja variable named `var`.
+Thus, the call to a Jinja template "MyNewSection.jinja2"
+```
+Section(".MyNewSection", scope, name="Joe", **context)
+```
+will invoke the template "MyNewSection.jinja2",
+passing it the variable "name" with the value of "Joe".
+Note the template name ".MyNewSection" starts with a leading ".",
+so it should be in the same directory as the caller.
 
-{% if <condition> %}::
-  <text>::
-{% endif %}::
-The text between the "if" and "endif" is included only if the condition is true.
-Note Jinja also includes "{% else %}" and "{% elif %}"
+==== Predefined Variables for Onboarding New Blocks
+When documenting new blocks, each of the three sections will be passed the following predefined variables.
 
-{% for var in list %}::
-<text>::
-{% endfor %}::
 
-Given a Python list, iterate through the list and evaluate the text.
-
-=== Jinja variables
-As mentioned in "What does a section look like", any parameter passed to
-Section() automatically becomes a Jinja template variable.
-
-==== Predefined Variables for Onboarding New Devices
-When documenting new devices, each of the three sections will be passed the following predefined variables.
-
-[horizontal]
 scope:: The primary element being described. Typically this will be
-        based on the object model schema for the device.
+        based on the object model schema for the block.
 
-devices:: If there are multiple instances of a device, then
+devices:: If there are multiple instances of the block, then
   `devices` contains all of them.
    Typically, `scope` is used to describe what all the devices
    have in common, while `devices` is used to iterate through
@@ -126,28 +131,32 @@ product_name:: Generally, the new device will be part of a larger
   to remind the reader of the overall context around the device.
 
 ==== Helper Functions for Displaying Device Data
-In addition, there are a number of helper functions:
+In addition to the variables, Scribble defines a number of helper functions:
 
-[horizontal]
+
 base_addr(device):: Returns the hex memory address of a device.
+
+Figure(image_path, title="title", id=reference_id, width="50%")::
+Inserts a figure into the document. If the image_path starts with `{here}`,
+then the image file is in the same directory as the caller.
+Currently supports svg and png.
 
 RegisterMap(device):: Creates a register map of the device which can be used
   to display various tables.  Typically,
-  `{% set registers = RegisterMap(device) %}`
 
-registers.table():: Displays a register map table, consisting of one line per register.
-registers.fields(registerName):: Displays the fields of a specific register.
-registers.names:: A list of register names, usually used to iterate
-    through all of a device's registers.
+  {% set registers = RegisterMap(device) %}
+  {{ registers.table() }}            {# Displays a register map table #}
+  {{ registers.fields("ODATA") }}    {# Displays fields for register ODATA #}
+  {{ registers.names | human_list }} {# Displays a list of register names #}
 
-==== Jinja "Pipe" Expre
-And finally, there are some Jinja "pipe" expressions to help with
+
+==== Jinja "Pipe" Expressions
+And finally, Scribble provides Jinja "pipe" expressions to help with
 grammar and formatting.
 
-[horizontal]
 list | length::
 returns the numeric size of a list
-number | human_readable (TODO-get correct name)::
+number | english_number::
 returns the number as an english word.  Examples are 1-->"one",
 10->"ten".
 list | plural(single, multiple)::
@@ -157,55 +166,9 @@ Returns the "single" text if the list length is 1, or the
 list | human_list::
 Converts the list into a comma separated english phrase.
 
-== Appendix - The Object Model
+num | human_size::
+Displays the number with an appropriate binary prefix (eg. KiB).
 
-The "object model" for a component is a description of the
-component which can be easily serialized to JSON. It simply gives a name to
-the type of of the componant and then lists the fields
-which describe the component.
-These fields are used directly to generate documentation and
-test plans for the device.
 
-Often, the field names will be similar to
-the verilog names, but they do not have to match.
 
-For convenience, think of the object model for a device as a Scala trait.
 
-----
-trait PIO extends Device {
-    dataWidth: Int,  # How many bits
-    description: String # Describes how the instance is used.
-}
-----
-
-As a "Device", the PIO object model will include additional fields describing
-memory maps, registers and interrupts.
-
-Besides the primitive types and the schema types, the object model includes
-List[type] and Option[type].
-Also note that, like Scala traits, schemas may inherit from multiple parent types.
-
-In summary,
-
- - Object model "schemas" are similar to Scala "traits".
- - Int, String, Real and Boolean are primitive types
- - schema xxx { } creates the xxx type.
- - List[type] and Option[type] are types.
-
-Designs described by the object model schemas are easily
-exchanged as JSON files.
-
-== Appendix - Asciidoc
-
-The markup language used for documentation is called "Asciidoc".
-It is a markup language similar to Markdown, but considerably richer.
-For an excellent description of Asciidoc, see http://ascidoctor.org.
-
-As a quick summary of the online information, asciidoc supports:
- - Paragraphs, chapters, sections and subsections.
-
-== Appendix - Jinja Templates
-
-While Asciidoc
-
-== Appendix - Mixing Python and Jinja
