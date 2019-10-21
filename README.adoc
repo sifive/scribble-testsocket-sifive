@@ -84,12 +84,16 @@ The PIO Test Socket contains five Parallel I/O ports.
 This chapter describes the device or block and how to use it.
 For some devices, the Section can get quite large and include a hierarchy
 of sections and subsections. For simpler blocks, it might be a single Jinja
-template.
+template file named `Programming.jinja2`.
 
 
-=== "HardwareInterface" Chapter
+=== "Hardware Interface" Chapter
 The hardware interface chapter decribes how the block interfaces with the rest of the design. It would
 describe the input and output signals, how they are clocked, and what interrupts the device generates.
+If it contains SRAMs, it might describe the SRAMs and how they are used.
+
+Again depending on the block, this chapter could invoke a hierarchy of sections and subsections. For simpler blocks,
+it might consist of a single Jinja template file named `HardwareInterface.jinja2`.
 
 == Appendix: Jinja Templates
 
@@ -97,7 +101,7 @@ describe the input and output signals, how they are clocked, and what interrupts
 Jinja templates consist of text interspersed with Jinja control statements.
 For a good introduction to Jinja, see the online https://jinja.palletsprojects.com/en/2.10.x/[Jinja Documentation].
 
-When Scribble invokes a template, it passes a number of predefined variables and template functions.
+When Scribble invokes a Jinja template, it passes a number of predefined variables and template functions to the template.
 These variables and functions are described below.
 
 ==== Predefined Variables for Onboarding New Blocks
