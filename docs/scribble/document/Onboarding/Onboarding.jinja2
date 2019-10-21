@@ -1,0 +1,27 @@
+= {{ product_name }} Documentation
+
+This is an example document that demonstrates the usage of the https://github.com/sifive/scribble[Scribble] documentation framework.
+Scribble dynamically collects and generates documentation content.
+This document describes the blocks present in a https://github.com/sifive/soc-testsocket-sifive[SiFive Test Socket SoC],
+showcasing the ability to render dynamic documentation content based on a specific SoC configuration.
+
+The {{ product_name }} includes the SiFive Test Socket along with the
+{{ deviceTypes | human_list }} blocks plugged into the socket.
+
+:leveloffset: +1
+= SiFive Test Socket
+
+As shown below in <<figure-test-socket>>, the Test Socket provides a framework that "wraps around" blocks.
+The Test Socket includes a Rocket processor, a TileLink bus, and any verifcation IP (VIP) for the wrapped blocks.
+
+{{ Figure("{here}/test-socket-block-diagram.svg", title="Test Socket", id="figure-test-socket", width="50%", **kwargs) }}
+
+{# Display an Overview chapter #}
+{{ Section(".Overview", scope, **kwargs) }}
+
+
+{% for devices in deviceGroups %}
+{{ Snippet("Programming", devices[0], devices=devices, **kwargs)  }}
+{{ Snippet("HardwareInterface", devices[0], devices=devices, **kwargs) }}
+{% endfor %}
+:leveloffset: -1

@@ -1,0 +1,11 @@
+= Block Overview
+
+The {{ product_name }} contains the following blocks:
+
+:leveloffset: +1
+
+{% for devices in deviceGroups %}
+{{ Snippet("Overview", devices[0], devices=devices, **kwargs) }}
+{% endfor %}
+
+:leveloffset: -1

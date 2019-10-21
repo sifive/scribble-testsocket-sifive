@@ -1,0 +1,15 @@
+{# Create a quick description of Registers for a generic device. #}
+{% set registers = RegisterMap(scope) %}
+
+== {{ scope._type }} Register Map
+
+{# Display an overview table of the registers #}
+{{ registers.table(title="{} Register Map".format(scope._type)) }}
+
+{# Create a section showing the fields for each register. #}
+{% for name in registers.names %}
+
+=== Register `{{name}}`
+{{ registers.fields(name) }}
+
+{% endfor %}
