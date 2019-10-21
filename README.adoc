@@ -12,14 +12,14 @@
 == Sections of a Document
 
 Scribble organizes a document into Sections, where each Section produces
-a piece of text and, optionally, invokes other Sections as subsections. When
-all of the Sections are evaluated, the resulting text is assembled into an AsciiDoc document.
+a piece of text, and optionally invokes other Sections as subsections.
+When all of the Sections are evaluated, the resulting text is assembled into an AsciiDoc document.
 
 When creating documents for a new hardware block, we aren't creating a whole new document.
-Rather, we are creating special Sections
+Rather, we are creating special Sections (sometimes called "Snippets")
 which can be inserted into other documents.
 
-These special Sections include:
+Scribble is expecting three Sections for each new hardware block:
 
  - An "Overview"" paragraph describing the block.
  - A "Programming" chapter describing how to use and program the block.
@@ -88,7 +88,8 @@ template.
 
 
 === "HardwareInterface" Chapter
-
+The hardware interface chapter decribes how the block interfaces with the rest of the design. It would
+describe the input and output signals, how they are clocked, and what interrupts the device generates.
 
 == Appendix: Jinja Templates
 
@@ -98,19 +99,6 @@ For a good introduction to Jinja, see the online https://jinja.palletsprojects.c
 
 When Scribble invokes a template, it passes a number of predefined variables and template functions.
 These variables and functions are described below.
-
-=== Scribble Variables in Templates
-Any named parameter passed to
-a Section() automatically becomes a Jinja template variable.
-
-Thus, the call to a Jinja template "MyNewSection.jinja2"
-```
-Section(".MyNewSection", scope, name="Joe", **context)
-```
-will invoke the template "MyNewSection.jinja2",
-passing it the variable "name" with the value of "Joe".
-Note the template name ".MyNewSection" starts with a leading ".",
-so it should be in the same directory as the caller.
 
 ==== Predefined Variables for Onboarding New Blocks
 When documenting new blocks, each of the three sections will be passed the following predefined variables.
@@ -130,9 +118,23 @@ product_name:: Generally, the new device will be part of a larger
   It is used mainly for titles, but it can be used by device sections
   to remind the reader of the overall context around the device.
 
-==== Helper Functions for Displaying Device Data
-In addition to the variables, Scribble defines a number of helper functions:
 
+=== Creating New Variables in Templates
+When invoking a template through the "Section()" call,
+all named parameters automatically become Jinja template variables.
+
+Thus, the following call to Jinja template "MyNewSection.jinja2"
+```
+Section(".MyNewSection", scope, name="Joe", **context)
+```
+will invoke the template "MyNewSection.jinja2",
+passing it the variable "name" with the value of "Joe".
+Note the section name `.MyNewSection` starts with a leading ".",
+so the file `MyNewSection.jinja2` should be in the same directory as the caller.
+
+
+==== Helper Functions for Displaying Device Data
+In addition to defining variables, Scribble defines a number of helper functions:
 
 base_addr(device):: Returns the hex memory address of a device.
 
