@@ -21,7 +21,7 @@ which can be inserted into other documents.
 
 Scribble is expecting three Sections for each new hardware block:
 
- - An "Overview"" paragraph describing the block.
+ - An "Overview" paragraph describing the block.
  - A "Programming" chapter describing how to use and program the block.
  This section describes the registers, the memory mapped addresses,
  and gives a detailed decription of how the block should be configured.
