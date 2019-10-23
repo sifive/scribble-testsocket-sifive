@@ -1,6 +1,6 @@
 [
     {
-        "commit": "491ceb7f6b38a7222e6accd8b3ff2e53af0b7605",
+        "commit": "ee20fdb38f5975b5b482ef9aec01d49dabeb7757",
         "name": "scribble",
         "source": "git@github.com:sifive/scribble.git"
     }
