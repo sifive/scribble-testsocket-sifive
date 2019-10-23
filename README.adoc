@@ -1,0 +1,194 @@
+= Documenting a Block
+
+== What you need to know
+
+* Knowledge of the block. What it does, how it is programmed, how do you interface to it,
+ and what are the configurable values.
+* How Scribble "Sections" work. Sections are the "generators" which produce documentation text.
+* The basics of https://asciidoctor.org/docs/asciidoc-writers-guide[AsciiDoc]. AsciiDoc is the markup language used by Scribble.
+* The https://jinja.palletsprojects.com/en/2.10.x/[Jinja] template processor. While complex Sections can be written
+ in Python, most Sections are more easily written as Jinja templates.
+* The Python language. While a lot of documentation can be written in Jinja, we often drop into Python to
+  convert data into a usable form.
+
+== Sections of a Document
+
+Scribble organizes a document into Sections, where each Section produces
+a piece of text and optionally invokes other Sections as subsections.
+When all Sections are evaluated, the resulting text is assembled into an AsciiDoc document.
+
+When creating documents for a new hardware block, we aren't creating a whole new document.
+Rather, we are creating special Sections (sometimes called "Snippets")
+which can be inserted into other documents.
+
+The Test Socket document is expecting three main Sections for each new hardware block:
+
+ - An "Overview" paragraph describing the block.
+ - A "Programming" chapter describing how to use and program the block.
+ This section describes the registers, the memory mapped addresses,
+ and gives a detailed decription of how the block should be configured.
+ - A "HardwareInterface" chapter describing how to interface to the block.
+ This section describes the interrupts, clocks and signals used by the block.
+
+These Sections will live in the "components" directory, in a subdirectory
+named after the block or device.
+
+For example, a new design for a "Whizbang" would have three files inside the following directories:
+```
+    - docs/scribble
+        - components
+            - Whizbang
+                - Overview.jinja2
+                - Programming.jinja2
+                - HardwareInterface.jinja2
+```
+
+=== What does a Section look like?
+
+A Section can be implemented as a Jinja template or as a Python function.
+In either case, it is invoked through Scribble's "Section" call.
+```
+Section("module name", scope, **context)
+```
+where:
+
+[horizontal]
+name:: is the python or jinja module name.
+scope:: is a subtree (element) of the object model.
+context:: are additional named values passed to the section.
+
+When a section is written as a Jinja template, all the
+named arguments are available as Jinja template variables.
+
+
+=== "Overview" Paragraph
+
+The overview is a simple paragraph describing the block.
+
+It is usually written as a single Jinja template.
+It doesn't need a lot of detail, but it isn't entirely static either.
+For example, if there is more than one instance of the device, then this
+section would mention how many there are.
+
+As an example, in the file `Overview.jinja2` the following line would describe how many parallel ports are in the design.
+
+----
+The {{ product_name }} contains {{ devices | length | english_number }} Parallel I/O ports.
+----
+
+which would be displayed as:
+
+----
+The PIO Test Socket contains five Parallel I/O ports.
+----
+
+=== "Programming" Chapter
+This chapter describes the device or block and how to use it.
+For some devices, the Section can get quite large and include a hierarchy
+of sections and subsections. For simpler blocks, it might be a single Jinja
+template file named `Programming.jinja2`.
+
+
+=== "Hardware Interface" Chapter
+The hardware interface chapter decribes how the block interfaces with the rest of the design. It would
+describe the input and output signals, how they are clocked, and what interrupts the device generates.
+If it contains SRAMs, it might describe the SRAMs and how they are used.
+
+Again depending on the block, this chapter could invoke a hierarchy of sections and subsections. For simpler blocks,
+it might consist of a single Jinja template file named `HardwareInterface.jinja2`.
+
+== Appendix: Jinja Templates
+
+=== Overview
+Jinja templates consist of text interspersed with Jinja control statements.
+For a good introduction to Jinja, see the online https://jinja.palletsprojects.com/en/2.10.x/[Jinja Documentation].
+
+When Scribble invokes a Jinja template, it passes a number of predefined variables and template functions to the template.
+These variables and functions are described below.
+
+==== Predefined Variables for Onboarding New Blocks
+When documenting new blocks, each of the three sections will be passed the following predefined variables.
+
+
+scope:: The primary element being described.
+   For the three main sections describing a block, scope is equivalent to `devices[0]`.
+
+devices:: If there are multiple instances of the block, then
+  `devices` contains all of them.
+   Typically, `scope` is used to describe what all the devices
+   have in common, while `devices` is used to iterate through
+   the instances describing the unique values of each.
+
+product_name:: Generally, the new device will be part of a larger
+  design. `product_name` denotes the name of the larger design.
+  It is used mainly for titles, but it can be used by device sections
+  to remind the reader of the overall context around the device.
+
+
+=== Creating New Variables in Templates
+When invoking a template through the "Section()" call,
+all named parameters automatically become Jinja template variables.
+
+Thus, the following call to Jinja template "MyNewSection.jinja2"
+```
+Section(".MyNewSection", scope, name="Joe", **context)
+```
+will invoke the template "MyNewSection.jinja2",
+passing it the variable "name" with the value of "Joe".
+Note the section name `.MyNewSection` starts with a leading ".",
+so the file `MyNewSection.jinja2` should be in the same directory as the caller.
+
+
+==== Helper Functions for Displaying Device Data
+In addition to defining variables, Scribble defines a number of helper functions:
+
+base_addr(device):: Returns the hex memory address of a device.
+
+Figure(image_path, title="title", id=reference_id, width="50%")::
+Inserts a figure into the document. If the image_path starts with `{here}`,
+then the image file is in the same directory as the caller.
+Currently supports svg and png.
+
+RegisterMap(device):: Creates a register map of the device which can be used
+  to display various tables.  Typically,
+
+  {% set registers = RegisterMap(device) %}
+  {{ registers.table() }}            {# Displays a register map table #}
+  {{ registers.fields("ODATA") }}    {# Displays fields for register ODATA #}
+  {{ registers.names | human_list }} {# Displays a list of register names #}
+
+
+==== Jinja Filters
+And finally, Scribble provides Jinja filter expressions to help with
+grammar and formatting. They are invoked using the "|" (pipe) character.
+
+In the following examples, a list of things (called "list") or a numeric value (called "number")
+is being passed to one of the filter functions.
+
+list | length::
+returns the numeric size of a list. +
+`["apples", "oranges"] | length` returns the value "2".
+
+number | english_number::
+returns the number as an english word. +
+`5 | english_number` evaluates to the word "five".
+
+list (or number) | pluralize:: Returns the character "s" if the list length is > 1. +
+`William of Orange{{ ["orange1", "orange2"] | pluralize }}` becomes "William of Oranges".
+
+list (or number) | pluralize("single,multiple")::
+Returns the "single" text if the list length is 1, or the
+"multiple" text if the list length is > 1. +
+`1 | pluralize("Orange,Oranges")` becomes "Orange".
+
+list | human_list::
+Converts the list into a comma separated english phrase. +
+`["A", "B", "C"] | human_list` generates the text "A, B and C".
+
+number | human_size::
+Displays the number with an appropriate binary prefix (eg. KiB). +
+`8192 | human_size` renders as "8.0 KiB".
+
+
+
+
