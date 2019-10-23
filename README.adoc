@@ -5,21 +5,23 @@
 * Knowledge of the block. What it does, how it is programmed, how do you interface to it,
  and what are the configurable values.
 * How Scribble "Sections" work. Sections are the "generators" which produce documentation text.
-* The basics of Asciidoc. Asciidoc is the markup language used by Scribble.
-* The Jinja template processor. While complex Sections can be written
+* The basics of https://asciidoctor.org/docs/asciidoc-writers-guide[AsciiDoc]. AsciiDoc is the markup language used by Scribble.
+* The https://jinja.palletsprojects.com/en/2.10.x/[Jinja] template processor. While complex Sections can be written
  in Python, most Sections are more easily written as Jinja templates.
+* The Python language. While a lot of documentation can be written in Jinja, we often drop into Python to
+  convert data into a usable form.
 
 == Sections of a Document
 
 Scribble organizes a document into Sections, where each Section produces
-a piece of text, and optionally invokes other Sections as subsections.
-When all of the Sections are evaluated, the resulting text is assembled into an AsciiDoc document.
+a piece of text and optionally invokes other Sections as subsections.
+When all Sections are evaluated, the resulting text is assembled into an AsciiDoc document.
 
 When creating documents for a new hardware block, we aren't creating a whole new document.
 Rather, we are creating special Sections (sometimes called "Snippets")
 which can be inserted into other documents.
 
-Scribble is expecting three Sections for each new hardware block:
+The Test Socket document is expecting three main Sections for each new hardware block:
 
  - An "Overview" paragraph describing the block.
  - A "Programming" chapter describing how to use and program the block.
@@ -28,7 +30,7 @@ Scribble is expecting three Sections for each new hardware block:
  - A "HardwareInterface" chapter describing how to interface to the block.
  This section describes the interrupts, clocks and signals used by the block.
 
-Typically, these sections will live in the "components" directory, in a subdirectory
+These Sections will live in the "components" directory, in a subdirectory
 named after the block or device.
 
 For example, a new design for a "Whizbang" would have three files inside the following directories:
@@ -108,8 +110,8 @@ These variables and functions are described below.
 When documenting new blocks, each of the three sections will be passed the following predefined variables.
 
 
-scope:: The primary element being described. Typically this will be
-        based on the object model schema for the block.
+scope:: The primary element being described.
+   For the three main sections describing a block, scope is equivalent to `devices[0]`.
 
 devices:: If there are multiple instances of the block, then
   `devices` contains all of them.
@@ -156,24 +158,36 @@ RegisterMap(device):: Creates a register map of the device which can be used
   {{ registers.names | human_list }} {# Displays a list of register names #}
 
 
-==== Jinja "Pipe" Expressions
-And finally, Scribble provides Jinja "pipe" expressions to help with
-grammar and formatting.
+==== Jinja Filters
+And finally, Scribble provides Jinja filter expressions to help with
+grammar and formatting. They are invoked using the "|" (pipe) character.
+
+In the following examples, a list of things (called "list") or a numeric value (called "number")
+is being passed to one of the filter functions.
 
 list | length::
-returns the numeric size of a list
+returns the numeric size of a list. +
+`["apples", "oranges"] | length` returns the value "2".
+
 number | english_number::
-returns the number as an english word.  Examples are 1-->"one",
-10->"ten".
-list | plural(single, multiple)::
+returns the number as an english word. +
+`5 | english_number` evaluates to the word "five".
+
+list (or number) | pluralize:: Returns the character "s" if the list length is > 1. +
+`William of Orange{{ ["orange1", "orange2"] | pluralize }}` becomes "William of Oranges".
+
+list (or number) | pluralize("single,multiple")::
 Returns the "single" text if the list length is 1, or the
-"plural" text if the list length is > 1.
+"multiple" text if the list length is > 1. +
+`1 | pluralize("Orange,Oranges")` becomes "Orange".
 
 list | human_list::
-Converts the list into a comma separated english phrase.
+Converts the list into a comma separated english phrase. +
+`["A", "B", "C"] | human_list` generates the text "A, B and C".
 
-num | human_size::
-Displays the number with an appropriate binary prefix (eg. KiB).
+number | human_size::
+Displays the number with an appropriate binary prefix (eg. KiB). +
+`8192 | human_size` renders as "8.0 KiB".
 
 
 
