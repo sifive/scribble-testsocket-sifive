@@ -41,14 +41,19 @@ class RegisterMap:
         # Using the OM register map, create our our own register map
         self.register_map = RegMap.from_object_model(map)
 
-    def table(self, caption: str, refid: str = "") -> Table:
+    def table(self, title: str = None, refid: str = None, caption: str = None) -> Table:
         """
         Create a register map table showing an overview of the registers
         """
-        table = self.register_map.get_register_map_table(caption, refid)
+
+        # For backwards compatibilty, allow parameter name "caption" as an alias to "title"
+        title = title or caption
+
+        # Now, create the table.
+        table = self.register_map.get_register_map_table(title, refid)
         return table
 
-    def fields(self, name: str, refid: str = "") -> Table:
+    def fields(self, name: str, refid: str = None) -> Table:
         """
         Create a table of fields for the given register.
         """
