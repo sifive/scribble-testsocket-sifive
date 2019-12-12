@@ -38,7 +38,7 @@ def Onboarding(element: Element, **context) -> Text:
     devices = (
         QueryStream(document.design.components)
         .is_instance("Device")
-        .is_not_instance("Core", "CLINT", "Debug")
+        .is_not_instance("Core", "CLINT", "Debug", "BusMemory")
     )
     deviceGroups = devices.sorted(key=memory_order).grouped_by(primary_type)
 
