@@ -5,7 +5,7 @@ on: [push, pull_request]
 jobs:
 
   typecheck:
-    name: 'Wake 0.18.1 typecheck'
+    name: 'Wake 0.19 typecheck'
     runs-on: ubuntu-latest
     env:
       # $WIT_WORKSPACE path is relative to $GITHUB_WORKSPACE
@@ -37,7 +37,7 @@ jobs:
         gid=$(id -g)
         sudo chown -R "$uid:$gid" .
         # Install Wake
-        curl -L -o /tmp/wake.deb https://github.com/sifive/wake/releases/download/v0.18.1/ubuntu-18-04-wake_0.18.1-1_amd64.deb && \
+        curl -L -o /tmp/wake.deb https://github.com/sifive/wake/releases/download/v0.19.0/ubuntu-18-04-wake_0.19.0-1_amd64.deb && \
             sudo dpkg -i /tmp/wake.deb && \
             rm /tmp/wake.deb
         # Initialize Wake workspace
